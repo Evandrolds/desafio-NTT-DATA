@@ -1,6 +1,5 @@
-package com.evandro.ntt_data.desafio;
+package com.evandro.ntt_data.desafio.util;
 
-import com.evandro.ntt_data.desafio.util.CalcularDistancia;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
