@@ -24,6 +24,10 @@ public class Agencia {
         this.address = address;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public Agencia() {
     }
 
