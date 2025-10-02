@@ -189,7 +189,7 @@ curl -X POST http://localhost:8080/api/agencia/cadastrar \
 👤 Contato
 
 Evandro Lima
-📧 evandro.lima@empresa.com
+📧 https://linkedin.com/in/evandrolds
 🔗 LinkedIn
 🏢 Desenvolvedor Backend
 📄 Licença
