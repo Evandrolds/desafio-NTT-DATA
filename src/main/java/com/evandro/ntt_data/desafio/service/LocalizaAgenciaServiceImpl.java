@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class LocalizaAgenciaServiceImpl implements LocalizaAgenciaService {
@@ -27,15 +28,17 @@ public class LocalizaAgenciaServiceImpl implements LocalizaAgenciaService {
     private final AgenciaMapper mapper;
     private final MeterRegistry meterRegistry;
     private final Logger logger = LoggerFactory.getLogger(LocalizaAgenciaServiceImpl.class);
-
+    private final AgenciaExternaService externaService;
     private final static int DEFAULT_MAX_RESULTS = 100;
 
     @Autowired
     public LocalizaAgenciaServiceImpl(LocalizaAgenciaRepository repository,
-                                      AgenciaMapper mapper, MeterRegistry meterRegistry) {
+                                      AgenciaMapper mapper, MeterRegistry meterRegistry,
+                                      AgenciaExternaService externaService) {
         this.repository = repository;
         this.mapper = mapper;
         this.meterRegistry = meterRegistry;
+        this.externaService = externaService;
     }
 
     @Override
@@ -69,8 +72,14 @@ public class LocalizaAgenciaServiceImpl implements LocalizaAgenciaService {
 
         // Aqui você já deve aplicar o filtro bounding-box no repository
         Page<Agencia> agencia = repository.findByLatitudeBetweenAndLongitudeBetween(minLat, maxLat, minLon, maxLon, pageable);
+        List<Agencia> agenciaExterna = externaService.buscarAgenciasProximas(latitude,longitude,maxDistanceKm != null?  maxDistanceKm: 50.0);
 
-        List<DistanciaResponse> filtered = agencia.stream()
+        List<Agencia> agencias = Stream.concat(
+                agencia.stream(),
+                agenciaExterna.stream()
+        ).collect(Collectors.toList());
+
+        List<DistanciaResponse> filtered = agencias.stream()
                 .map(p -> {
                     double dist = CalcularDistancia.distanceKm(latitude, longitude, p.getLatitude(), p.getLongitude());
                     return mapper.toDistanciaResponse(p, dist);
