@@ -163,6 +163,10 @@ src/
 │   │       └── util/          # Utilitários
 │   └── resources/
 │       └── application.properties
+└── com/evandro/ntt_data/desafio/
+    └── service
+    └── testConfi
+    └── util
 
 🔮 Exemplos de Uso
 Exemplo 1: Buscar agências próximas ao centro de São Paulo
