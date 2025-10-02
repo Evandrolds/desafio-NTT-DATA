@@ -17,7 +17,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/agencia")
-@Tag(name = "Agencia",description = "Cadastre e busque a agencia mais próxima de voce")
 public class LocalizaAgenciaController {
 
     private final LocalizaAgenciaService service;
