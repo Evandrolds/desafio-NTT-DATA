@@ -163,6 +163,10 @@ src/
 │   │       └── util/          # Utilitários
 │   └── resources/
 │       └── application.properties
+└── com/evandro/ntt_data/desafio/
+    └── service
+    └── testConfi
+    └── util
 
 🔮 Exemplos de Uso
 Exemplo 1: Buscar agências próximas ao centro de São Paulo
@@ -185,7 +189,7 @@ curl -X POST http://localhost:8080/api/agencia/cadastrar \
 👤 Contato
 
 Evandro Lima
-📧 evandro.lima@empresa.com
+📧 https://linkedin.com/in/evandrolds
 🔗 LinkedIn
 🏢 Desenvolvedor Backend
 📄 Licença
