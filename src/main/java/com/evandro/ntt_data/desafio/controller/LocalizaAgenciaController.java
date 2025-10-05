@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedModel;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.http.HttpStatus;
@@ -27,20 +29,19 @@ public class LocalizaAgenciaController {
     }
     @Operation(summary = "Cadastrar agencia")
     @PostMapping("/cadastrar")
-    public ResponseEntity<AgenciaResponse> saveAgencia(@RequestBody AgenciaRequest requestDTO){
+    public ResponseEntity<AgenciaResponse> saveAgencia(@RequestBody(required = true) AgenciaRequest requestDTO){
       return new ResponseEntity<>(service.createAgencia(requestDTO),HttpStatus.CREATED);
     }
     @Operation(summary = "Buscar agencias próximas ordenadas por proximidade")
-    @GetMapping("/distancia")
-    public ResponseEntity<PageResponse<DistanciaResponse>> closest(
-            @RequestParam double latitude,
-            @RequestParam double longitude,
-            @RequestParam(required = false) Double maxDistanceKm,
+    @GetMapping("/agencias/closest")
+    public ResponseEntity<PageResponse<DistanciaResponse>> findClosest(
+            double latitude,
+            double longitude,
+            @RequestParam(required = false, defaultValue = "50") Double maxDistanceKm,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        PageResponse<DistanciaResponse> result =
-                service.findClosestDistance(latitude, longitude, maxDistanceKm, page, size);
+            @RequestParam(defaultValue = "10") int size) {
+        PageResponse<DistanciaResponse> result = service.findClosestDistance(latitude, longitude, maxDistanceKm,page,size);
         return ResponseEntity.ok(result);
     }
+
 }

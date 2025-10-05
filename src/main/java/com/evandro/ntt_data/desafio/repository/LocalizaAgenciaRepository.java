@@ -1,8 +1,6 @@
 package com.evandro.ntt_data.desafio.repository;
 
 import com.evandro.ntt_data.desafio.domain.Agencia;
-import com.evandro.ntt_data.desafio.dto.CoordenadasRequest;
-import com.evandro.ntt_data.desafio.dto.PageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

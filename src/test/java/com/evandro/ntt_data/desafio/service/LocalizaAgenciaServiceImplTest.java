@@ -30,8 +30,8 @@ class LocalizaAgenciaServiceImplTest {
 
     @Test
     void createAgenciaTestPersistReturn() {
-        AgenciaRequest dto = new AgenciaRequest("Ponto A", -23.55, -46.63, "Rua X");
-        Agencia agencia = new Agencia(1L, dto.name(), dto.latitude(), dto.longitude(), dto.address());
+        AgenciaRequest dto = new AgenciaRequest("Ponto A", -23.55, -46.63, "Rua X",1.2);
+        Agencia agencia = new Agencia(1L, dto.name(), dto.latitude(), dto.longitude(), dto.address(),dto.distancia());
 
         when(repository.save(any(Agencia.class))).thenAnswer(invocation -> {
             Agencia a = invocation.getArgument(0);
@@ -49,8 +49,8 @@ class LocalizaAgenciaServiceImplTest {
 
     @Test
     void findNearOrAgenceDistance() {
-        Agencia p1 = new Agencia(1L,"A",-23.5505,-46.6333,"A");
-        Agencia p2 = new Agencia(2L,"B",-23.5505,-46.6333,"B");
+        Agencia p1 = new Agencia(1L,"A",-23.5505,-46.6333,"A",1.0);
+        Agencia p2 = new Agencia(2L,"B",-23.5505,-46.6333,"B",2.0);
 
         Page<Agencia> page = new PageImpl<>(List.of(p1, p2));
 
