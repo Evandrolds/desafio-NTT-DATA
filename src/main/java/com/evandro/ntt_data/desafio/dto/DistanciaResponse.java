@@ -6,5 +6,6 @@ public record DistanciaResponse(
         Double positionX,
         Double positionY,
         String address,
-        Double distanceKm
+        Double distanceKm,
+        String externalId
 ){}
