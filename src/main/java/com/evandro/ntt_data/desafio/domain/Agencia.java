@@ -1,7 +1,6 @@
 package com.evandro.ntt_data.desafio.domain;
 
 import jakarta.persistence.*;
-import lombok.*;
 
 @Entity
 @Table(name = "tb_agencia")
@@ -15,8 +14,20 @@ public class Agencia {
     @Column(nullable = false)
     private Double longitude;
     private String address;
+    @Column(name = "EXTERNALID")
     private String externalId;
+    @Column(name = "DISTANCE")
     private Double distance;
+
+    public Agencia(Long id, String name, Double latitude, Double longitude, String address, String externalId, Double distance) {
+        this.id = id;
+        this.name = name;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.address = address;
+        this.externalId = externalId;
+        this.distance = distance;
+    }
 
     public Double getDistance() {
         return distance;
@@ -34,13 +45,7 @@ public class Agencia {
         this.externalId = externalId;
     }
 
-    public Agencia(Long id, String name, Double latitude, Double longitude, String address) {
-        this.id = id;
-        this.name = name;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.address = address;
-    }
+
 
     public void setName(String name) {
         this.name = name;
