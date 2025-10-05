@@ -5,5 +5,6 @@ public record AgenciaResponse(
         String name,
         Double positionX,
         Double positionY,
-        String address){
+        String address,
+        Double distacia){
 }

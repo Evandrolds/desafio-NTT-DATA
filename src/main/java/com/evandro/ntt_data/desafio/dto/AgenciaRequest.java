@@ -17,6 +17,7 @@ public record AgenciaRequest(
         @DecimalMin(value = "-180.0", inclusive = true)
         @DecimalMax(value = "180.0", inclusive = true)
         Double longitude,
-        String address
+        String address,
+        Double distancia
 
 ){}
