@@ -1,25 +1,45 @@
-API de Localização de Agências Bancárias.
+API de Localização de Agências Bancárias
+📋 Visão Geral
 
-📋 Visão Geral:
+API REST para localização de agências bancárias desenvolvida em Spring Boot 3.5.6 com Java 21. A API busca agências em banco de dados local e, caso não encontre, consulta a API externa Overpass, retornando resultados ordenados por proximidade geográfica.
+🛠️ Tecnologias Utilizadas
 
-API REST para localização de agências bancárias com capacidade de buscar tanto em banco de dados local quanto em API externa (Overpass), ordenando resultados por proximidade geográfica.
+    Java 21
+
+    Spring Boot 3.5.6
+
+    Spring Data JPA - Persistência de dados
+
+    H2 Database - Banco em memória para testes
+
+    SpringDoc OpenAPI 2.8.13 - Documentação da API
+
+    Spring HATEOAS - Paginação e hypermedia
+
+    Spring Cache - Cache de consultas
+
+    Spring Actuator + Micrometer - Métricas e monitoramento
+
+    Lombok - Redução de código boilerplate
+
+    Mockito - Testes unitários
+
 🚀 Endpoints
-1. Cadastrar Agência:
+1. Cadastrar Agência
 
 POST /api/agencia/cadastrar
 
 Cadastra uma nova agência bancária no banco de dados.
 Request Body:
+json
 
-  json
-  
-  {
-    "name": "string (2-200 caracteres)",
-    "latitude": "number (-90.0 a 90.0)",
-    "longitude": "number (-180.0 a 180.0)",
-    "address": "string",
-    "distancia": "number"
-  }
+{
+  "name": "string (2-200 caracteres)",
+  "latitude": "number (-90.0 a 90.0)",
+  "longitude": "number (-180.0 a 180.0)",
+  "address": "string",
+  "distancia": "number"
+}
 
 Response (201 Created):
 json
@@ -33,7 +53,7 @@ json
   "distacia": "number"
 }
 
-2. Buscar Agências Próximas:
+2. Buscar Agências Próximas
 
 GET /api/agencia/agencias/closest
 
@@ -68,11 +88,9 @@ json
 }
 
 🔄 Fluxo de Busca
+1. Busca Local (Banco H2)
 
-A API implementa uma estratégia de busca em duas camadas:
-1. Busca Local (Banco de Dados)
-
-    Consulta agências no banco de dados local
+    Consulta agências no banco H2 local
 
     Filtra por proximidade usando cálculo de distância Haversine
 
@@ -88,35 +106,26 @@ A API implementa uma estratégia de busca em duas camadas:
 
     Armazena no banco local para futuras consultas
 
-🛠️ Tecnologias Utilizadas
-
-    Java 21
-
-    Spring Boot 3.5.6
-
-    Spring Data JPA - Persistência de dados
-
-    H2 Database - Banco em memória para testes
-
-    SpringDoc OpenAPI 2.8.13 - Documentação da API
-
-    Spring HATEOAS - Paginação e hypermedia
-
-    Spring Cache - Cache de consultas
-
-    Spring Actuator + Micrometer - Métricas e monitoramento
-
-    Lombok - Redução de código boilerplate
-
-    Mockito - Testes unitários
-
 📐 Cálculo de Distância
 
 Utiliza a fórmula de Haversine para calcular distâncias geográficas:
 java
 
-// Raio da Terra em km
 private static final double raioDaTerraEmKm = 6371.0088;
+
+public static double distanceKm(double positionX, double positionY, double latitude, double longitude) {
+    double latRad1 = Math.toRadians(positionX);
+    double latRad2 = Math.toRadians(positionY);
+    double deltaLat = Math.toRadians(latitude - positionX);
+    double deltaLon = Math.toRadians(longitude - positionY);
+    
+    double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
+            + Math.cos(latRad1) * Math.cos(latRad2)
+            * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+    
+    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return raioDaTerraEmKm * c;
+}
 
 💾 Estrutura de Dados
 Tabela: tb_agencia
@@ -128,38 +137,44 @@ longitude	DOUBLE	Coordenada longitude
 address	VARCHAR	Endereço completo
 externalId	VARCHAR	ID externo da Overpass API
 distance	DOUBLE	Distância calculada
-⚡ Funcionalidades Avançadas
+⚡ Funcionalidades
 Cache
 
-    Consultas de proximidade são cacheadas usando @Cacheable
+    Consultas cacheadas com @Cacheable
 
-    Chave do cache: {latitude, longitude, maxDistanceKm, page, size}
+    Chave: {latitude, longitude, maxDistanceKm, page, size}
 
 Paginação
 
-    Suporte a paginação para grandes conjuntos de resultados
+    Implementada com Spring HATEOAS
 
-    Parâmetros page e size controlam a paginação
+    Parâmetros page e size para controle
+
+Documentação
+
+    Swagger UI disponível em /swagger-ui.html
+
+    OpenAPI 3.0 em /v3/api-docs
+
+Monitoramento
+
+    Spring Actuator para health checks
+
+    Micrometer para métricas de performance
 
 Validação
 
-    Validação de coordenadas geográficas (-90 a 90 para latitude, -180 a 180 para longitude)
+    Validação de coordenadas geográficas
 
-    Validação de tamanho do nome (2-200 caracteres)
+    Tamanho do nome: 2-200 caracteres
 
-Logs
-
-    Logs detalhados usando SLF4J
-
-    Rastreamento de consultas locais e externas
-
-🔍 Exemplo de Uso
+🔍 Exemplos de Uso
 Buscar agências próximas:
 bash
 
 GET /api/agencia/agencias/closest?latitude=-23.5505&longitude=-46.6333&maxDistanceKm=10&page=0&size=5
 
-Cadastrar nova agência:
+Cadastrar agência:
 bash
 
 POST /api/agencia/cadastrar
@@ -169,16 +184,29 @@ Content-Type: application/json
   "name": "Agência Centro",
   "latitude": -23.5505,
   "longitude": -46.6333,
-  "address": "Rua XV de Novembro, 100 - Centro, São Paulo/SP",
-  "distancia": 0.0
+  "address": "Rua XV de Novembro, 100 - Centro, São Paulo/SP"
 }
 
-🚦 Considerações
+🚀 Execução
+bash
 
-    A API prioriza dados locais sobre consultas externas
+# Compilar e executar
+mvn spring-boot:run
 
-    Dados da Overpass API são armazenados localmente após a primeira consulta
+# Acessar documentação
+http://localhost:8080/swagger-ui.html
 
-    O cálculo de distância é aproximado usando fórmula esférica
+# Acessar banco H2 (se configurado)
+http://localhost:8080/h2-console
 
-    Recomenda-se uso de índices espaciais no banco para melhor performance
+📊 Características Técnicas
+
+    Cache: Spring Cache com estratégia simples
+
+    Paginação: Spring HATEOAS com PageResponse customizado
+
+    Logging: SLF4J com logs detalhados
+
+    Testes: Mockito para testes unitários
+
+    Validação: Bean Validation com mensagens customizadas
