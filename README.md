@@ -10,15 +10,16 @@ POST /api/agencia/cadastrar
 
 Cadastra uma nova agência bancária no banco de dados.
 Request Body:
-json
 
-{
-  "name": "string (2-200 caracteres)",
-  "latitude": "number (-90.0 a 90.0)",
-  "longitude": "number (-180.0 a 180.0)",
-  "address": "string",
-  "distancia": "number"
-}
+  json
+  
+  {
+    "name": "string (2-200 caracteres)",
+    "latitude": "number (-90.0 a 90.0)",
+    "longitude": "number (-180.0 a 180.0)",
+    "address": "string",
+    "distancia": "number"
+  }
 
 Response (201 Created):
 json
