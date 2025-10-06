@@ -1,9 +1,10 @@
-API de Localização de Agências Bancárias
-📋 Visão Geral
+API de Localização de Agências Bancárias.
+
+📋 Visão Geral:
 
 API REST para localização de agências bancárias com capacidade de buscar tanto em banco de dados local quanto em API externa (Overpass), ordenando resultados por proximidade geográfica.
 🚀 Endpoints
-1. Cadastrar Agência
+1. Cadastrar Agência:
 
 POST /api/agencia/cadastrar
 
@@ -31,7 +32,7 @@ json
   "distacia": "number"
 }
 
-2. Buscar Agências Próximas
+2. Buscar Agências Próximas:
 
 GET /api/agencia/agencias/closest
 
@@ -88,21 +89,25 @@ A API implementa uma estratégia de busca em duas camadas:
 
 🛠️ Tecnologias Utilizadas
 
-    Java 17+
+    Java 21
 
-    Spring Boot 3.x
+    Spring Boot 3.5.6
 
-    Spring Data JPA
+    Spring Data JPA - Persistência de dados
 
-    H2/PostgreSQL (Banco de dados)
+    H2 Database - Banco em memória para testes
 
-    Spring Cache (Cache de consultas)
+    SpringDoc OpenAPI 2.8.13 - Documentação da API
 
-    Micrometer (Métricas)
+    Spring HATEOAS - Paginação e hypermedia
 
-    Swagger/OpenAPI (Documentação)
+    Spring Cache - Cache de consultas
 
-    Overpass API (Dados externos)
+    Spring Actuator + Micrometer - Métricas e monitoramento
+
+    Lombok - Redução de código boilerplate
+
+    Mockito - Testes unitários
 
 📐 Cálculo de Distância
 
