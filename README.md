@@ -1,5 +1,6 @@
 API de Localização de Agências Bancárias
-📋 Visão Geral
+
+📋 Visão Geral:
 
 API REST para localização de agências bancárias desenvolvida em Spring Boot 3.5.6 com Java 21. A API busca agências em banco de dados local e, caso não encontre, consulta a API externa Overpass, retornando resultados ordenados por proximidade geográfica.
 🛠️ Tecnologias Utilizadas
