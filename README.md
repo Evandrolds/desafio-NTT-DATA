@@ -1,4 +1,4 @@
-Documentação da API de Localização de Agências Bancárias
+API de Localização de Agências Bancárias
 📋 Visão Geral
 
 API REST para localização de agências bancárias com capacidade de buscar tanto em banco de dados local quanto em API externa (Overpass), ordenando resultados por proximidade geográfica.
@@ -176,15 +176,3 @@ Content-Type: application/json
     O cálculo de distância é aproximado usando fórmula esférica
 
     Recomenda-se uso de índices espaciais no banco para melhor performance
-
-📊 Métricas
-
-A API expõe métricas através do Micrometer para monitoramento de:
-
-    Número de consultas
-
-    Tempo de resposta
-
-    Cache hits/misses
-
-    Consultas à API externa
