@@ -1,7 +1,7 @@
 # 🏦 Find My Agency API
 
 API de geolocalização e cadastro de agências bancárias.  
-Permite localizar as agências mais próximas com base na latitude e longitude informadas pelo usuário, integrando dados externos da **Overpass API (OpenStreetMap)** e armazenando no banco local.
+Permite localizar as agências mais próximas com base na latitude e longitude informadas pelo usuário, integrando dados externos da **Overpass API** e armazenando no banco local.
 
 ---
 
