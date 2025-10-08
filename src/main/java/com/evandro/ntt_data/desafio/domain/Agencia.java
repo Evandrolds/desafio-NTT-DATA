@@ -14,7 +14,7 @@ public class Agencia {
     @Column(nullable = false)
     private Double longitude;
     private String address;
-    @Column(name = "EXTERNALID")
+    @Column(name = "EXTERNALID",unique = true)
     private String externalId;
     @Column(name = "DISTANCE")
     private Double distance;
