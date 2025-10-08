@@ -1,224 +1,213 @@
-🏦 Find My Agency API - Documentação
-📋 Sobre a API
+API de Localização de Agências Bancárias
 
-API de geolocalização e cadastro de agências bancárias que permite encontrar as agências mais próximas com base na localização do usuário, utilizando cálculos de distância por coordenadas geográficas.
-🚀 Funcionalidades
+📋 Visão Geral:
 
-    📍 Geolocalização Inteligente - Encontra agências mais próximas usando coordenadas GPS
-
-    📊 Cadastro de Agências - Gerencia informações completas das agências
-
-    🔍 Busca com Filtros - Filtra por distância máxima e paginação
-
-    ⚡ Performance Otimizada - Cache e métricas para melhor performance
-
-    📈 Monitoramento - Métricas e logging detalhado
-
+API REST para localização de agências bancárias desenvolvida em Spring Boot 3.5.6 com Java 21. A API busca agências em banco de dados local e, caso não encontre, consulta a API externa Overpass, retornando resultados ordenados por proximidade geográfica.
 🛠️ Tecnologias Utilizadas
 
-    Java 17+ - Linguagem de programação
+    Java 21
 
-    Spring Boot 3.x - Framework principal
-
-    H2 Database - Banco de dados em memória
+    Spring Boot 3.5.6
 
     Spring Data JPA - Persistência de dados
 
-    Micrometer - Métricas e monitoramento
+    H2 Database - Banco em memória para testes
 
-    Spring Cache - Cache de resultados
+    SpringDoc OpenAPI 2.8.13 - Documentação da API
 
-    OpenAPI 3 - Documentação da API
+    Spring HATEOAS - Paginação e hypermedia
 
-📚 Endpoints da API
-1. 🆕 Cadastrar Agência
+    Spring Cache - Cache de consultas
+
+    Spring Actuator + Micrometer - Métricas e monitoramento
+
+    Lombok - Redução de código boilerplate
+
+    Mockito - Testes unitários
+
+🚀 Endpoints
+1. Cadastrar Agência
 
 POST /api/agencia/cadastrar
 
-Cadastra uma nova agência no sistema.
-
+Cadastra uma nova agência bancária no banco de dados.
 Request Body:
 json
 
 {
-"name": "string",
-"address": "string",
-"latitude": -23.5505,
-"longitude": -46.6333
+  "name": "string (2-200 caracteres)",
+  "latitude": "number (-90.0 a 90.0)",
+  "longitude": "number (-180.0 a 180.0)",
+  "address": "string",
+  "distancia": "number"
 }
 
-Response:
+Response (201 Created):
 json
 
 {
-"id": 1,
-"name": "Agência Centro",
-"address": "Rua Principal, 123",
-"latitude": -23.5505,
-"longitude": -46.6333
+  "id": "long",
+  "name": "string",
+  "positionX": "number",
+  "positionY": "number",
+  "address": "string",
+  "distacia": "number"
 }
 
-2. 📍 Buscar Agências Próximas
+2. Buscar Agências Próximas
 
-GET /api/agencia/distancia
+GET /api/agencia/agencias/closest
 
-Encontra agências mais próximas ordenadas por distância.
-
-Parâmetros:
+Busca agências bancárias próximas a uma localização, ordenadas por proximidade.
+Parâmetros de Query:
 Parâmetro	Tipo	Obrigatório	Default	Descrição
-latitude	double	✅	-	Latitude do ponto de busca
-longitude	double	✅	-	Longitude do ponto de busca
-maxDistanceKm	Double	❌	50.0	Distância máxima em km (opcional)
-page	int	❌	0	Página para paginação
-size	int	❌	20	Tamanho da página (max: 100)
-
-Exemplo de Request:
-text
-
-GET /api/agencia/distancia?latitude=-23.5505&longitude=-46.6333&maxDistanceKm=10&page=0&size=10
-
-Response:
+latitude	double	✅	-	Latitude do ponto de referência
+longitude	double	✅	-	Longitude do ponto de referência
+maxDistanceKm	double	❌	50	Raio máximo de busca em km
+page	int	❌	0	Número da página para paginação
+size	int	❌	10	Tamanho da página para paginação
+Response (200 OK):
 json
 
 {
-"content": [
-{
-"id": 1,
-"name": "Agência Centro",
-"address": "Rua Principal, 123",
-"latitude": -23.5505,
-"longitude": -46.6333,
-"distanceKm": 0.5
+  "content": [
+    {
+      "id": "long",
+      "name": "string",
+      "positionX": "number",
+      "positionY": "number",
+      "address": "string",
+      "distanceKm": "number",
+      "externalId": "string"
+    }
+  ],
+  "pageNumber": "int",
+  "pageSize": "int",
+  "totalElements": "long",
+  "totalPages": "int",
+  "last": "boolean"
 }
-],
-"page": 0,
-"size": 10,
-"totalElements": 1,
-"totalPages": 1
-}
 
-🔧 Configuração e Instalação
-Pré-requisitos
+🔄 Fluxo de Busca
+1. Busca Local (Banco H2)
 
-    Java 17+
+    Consulta agências no banco H2 local
 
-    Maven 3.6+
+    Filtra por proximidade usando cálculo de distância Haversine
 
-    Spring Boot 3.x
+    Retorna resultados ordenados por distância
 
-Configuração do Banco de Dados
+2. Busca Externa (Overpass API)
 
-A aplicação utiliza H2 Database em memória:
-properties
+    Se não encontrar resultados locais, consulta a API Overpass
 
-spring.datasource.url=jdbc:h2:mem:agenciadb
-spring.datasource.username=seu_usuario
-spring.datasource.password=sua_senha
-spring.h2.console.enabled=true
+    Busca por nodes com amenity=bank no raio especificado
 
-Console H2: http://localhost:8080/h2-console
-Métricas e Monitoramento
+    Processa e formata os dados da resposta
 
-A API expõe métricas via Spring Actuator:
+    Armazena no banco local para futuras consultas
 
-    Health: /actuator/health
+📐 Cálculo de Distância
 
-    Metrics: /actuator/metrics
-
-    Prometheus: /actuator/prometheus
-
-🎯 Algoritmo de Busca
-Cálculo de Distância
-
-Utiliza a Fórmula de Haversine para calcular distâncias entre coordenadas:
+Utiliza a fórmula de Haversine para calcular distâncias geográficas:
 java
 
-public static double distanceKm(double lat1, double lon1, double lat2, double lon2) {
-// Implementação do algoritmo Haversine
-// Retorna distância em quilômetros
+private static final double raioDaTerraEmKm = 6371.0088;
+
+public static double distanceKm(double positionX, double positionY, double latitude, double longitude) {
+    double latRad1 = Math.toRadians(positionX);
+    double latRad2 = Math.toRadians(positionY);
+    double deltaLat = Math.toRadians(latitude - positionX);
+    double deltaLon = Math.toRadians(longitude - positionY);
+    
+    double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
+            + Math.cos(latRad1) * Math.cos(latRad2)
+            * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+    
+    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return raioDaTerraEmKm * c;
 }
 
-Otimizações Implementadas
-
-    Bounding Box Filter - Filtro inicial por área aproximada
-
-    Cache de Resultados - Cache com @Cacheable para consultas repetidas
-
-    Paginação - Controle de número de resultados
-
-    Métricas - Timer para monitorar performance
-
-📊 Estrutura do Projeto
-text
-
-src/
-├── main/
-│   ├── java/
-│   │   └── com/evandro/ntt_data/desafio/
-│   │       ├── controller/     # Controladores REST
-│   │       ├── service/        # Lógica de negócio
-│   │       ├── repository/     # Camada de dados
-│   │       ├── domain/         # Entidades JPA
-│   │       ├── dto/           # Objetos de transferência
-│   │       └── util/          # Utilitários
-│   └── resources/
-│       └── application.properties
-└── com/evandro/ntt_data/desafio/
-    └── service
-    └── testConfi
-    └── util
-
-🔮 Exemplos de Uso
-Exemplo 1: Buscar agências próximas ao centro de São Paulo
-bash
-
-curl "http://localhost:8080/api/agencia/distancia?latitude=-23.5505&longitude=-46.6333&maxDistanceKm=5&size=5"
-
-Exemplo 2: Cadastrar nova agência
-bash
-
-curl -X POST http://localhost:8080/api/agencia/cadastrar \
--H "Content-Type: application/json" \
--d '{
-"name": "Agência Paulista",
-"address": "Av. Paulista, 1000",
-"latitude": -23.5631,
-"longitude": -46.6542
-}'
-
-👤 Contato
-
-Evandro Lima
-📧 https://linkedin.com/in/evandrolds
-🔗 LinkedIn
-🏢 Desenvolvedor Backend
-📄 Licença
-
-MIT License - Veja o arquivo LICENSE para detalhes.
-🔗 Links Úteis
-
-    Documentação Swagger: http://localhost:8080/swagger-ui.html
-
-    OpenAPI Spec: http://localhost:8080/v3/api-docs
-
-    H2 Console: http://localhost:8080/h2-console
-
-    Health Check: http://localhost:8080/actuator/health
-
-🐛 Troubleshooting
-Logs
-
-Para debug, configure o logging:
-properties
-
-logging.level.com.evandro.ntt_data.desafio=DEBUG
-
+💾 Estrutura de Dados
+Tabela: tb_agencia
+Campo	Tipo	Descrição
+id	BIGINT	ID único (auto-increment)
+name	VARCHAR	Nome da agência
+latitude	DOUBLE	Coordenada latitude
+longitude	DOUBLE	Coordenada longitude
+address	VARCHAR	Endereço completo
+externalId	VARCHAR	ID externo da Overpass API
+distance	DOUBLE	Distância calculada
+⚡ Funcionalidades
 Cache
 
-O cache é automaticamente gerenciado pelo Spring Cache. Para limpar:
+    Consultas cacheadas com @Cacheable
 
-    Reinicie a aplicação ou
+    Chave: {latitude, longitude, maxDistanceKm, page, size}
 
-    Configure TTL no cache
+Paginação
 
-⭐ Se este projeto foi útil, deixe uma estrela no repositório!
+    Implementada com Spring HATEOAS
+
+    Parâmetros page e size para controle
+
+Documentação
+
+    Swagger UI disponível em /swagger-ui.html
+
+    OpenAPI 3.0 em /v3/api-docs
+
+Monitoramento
+
+    Spring Actuator para health checks
+
+    Micrometer para métricas de performance
+
+Validação
+
+    Validação de coordenadas geográficas
+
+    Tamanho do nome: 2-200 caracteres
+
+🔍 Exemplos de Uso
+Buscar agências próximas:
+bash
+
+GET /api/agencia/agencias/closest?latitude=-23.5505&longitude=-46.6333&maxDistanceKm=10&page=0&size=5
+
+Cadastrar agência:
+bash
+
+POST /api/agencia/cadastrar
+Content-Type: application/json
+
+{
+  "name": "Agência Centro",
+  "latitude": -23.5505,
+  "longitude": -46.6333,
+  "address": "Rua XV de Novembro, 100 - Centro, São Paulo/SP"
+}
+
+🚀 Execução
+bash
+
+# Compilar e executar
+mvn spring-boot:run
+
+# Acessar documentação
+http://localhost:8080/swagger-ui.html
+
+# Acessar banco H2 (se configurado)
+http://localhost:8080/h2-console
+
+📊 Características Técnicas
+
+    Cache: Spring Cache com estratégia simples
+
+    Paginação: Spring HATEOAS com PageResponse customizado
+
+    Logging: SLF4J com logs detalhados
+
+    Testes: Mockito para testes unitários
+
+    Validação: Bean Validation com mensagens customizadas
