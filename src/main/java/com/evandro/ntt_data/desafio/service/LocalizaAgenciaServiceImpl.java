@@ -5,7 +5,9 @@ import com.evandro.ntt_data.desafio.dto.*;
 import com.evandro.ntt_data.desafio.repository.LocalizaAgenciaRepository;
 import com.evandro.ntt_data.desafio.repository.LocalizaAgenciaService;
 import com.evandro.ntt_data.desafio.util.AgenciaMapper;
+import com.evandro.ntt_data.desafio.util.CalcularDistancia;
 import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,51 +49,98 @@ public class LocalizaAgenciaServiceImpl implements LocalizaAgenciaService {
 
     @Override
     @Cacheable(value = "findClosest", key = "{#latitude, #longitude, #maxDistanceKm, #page, #size}")
-    public PageResponse<DistanciaResponse> findClosestDistance(double latitude,
+    public PageResponse<AgenciaResponse>  encontrarAgenciasMaisProximas(double latitude,
                                                                double longitude,
-                                                               Double maxDistanceKm,
+                                                               double maxDistanceKm,
                                                                int page,
                                                                int size) {
 
-        logger.info("Buscando agências mais próximas (lat={}, lon={}, raio={}km)", latitude, longitude, maxDistanceKm);
+        logger.info("🔍Buscando agências mais próximas (lat={}, lon={}, raio={}km)", latitude, longitude, maxDistanceKm);
 
-        // 1 - Tenta buscar localmente
-        List<Agencia> agenciasBanco = buscarAgenciasDoBanco(latitude, longitude, maxDistanceKm, page, size);
-
-        if (!agenciasBanco.isEmpty()) {
-            logger.info("Agências encontradas no banco: {}", agenciasBanco.size());
-            return mapper.toPageResponse(agenciasBanco);
+        // 🔍 Tenta buscar localmente
+        PageResponse<AgenciaResponse>  agenciasBanco = buscarAgenciasDoBanco(latitude, longitude, maxDistanceKm, page, size);
+        logger.info("Total de agencias encontradas no bando local: ", agenciasBanco.content().size());
+        if (!agenciasBanco.content().isEmpty()) {
+            logger.info("Agências encontradas no banco: {}", agenciasBanco.content().size());
+            return  agenciasBanco;
         }
 
-        // 2 - Busca na API externa
-        PageResponse<DistanciaResponse> externas = externaService.findAgenciasBdOuApiExterna(latitude, longitude, maxDistanceKm, page, size);
+        // 🔍 Busca na API externa (OverPass)
+        PageResponse<AgenciaResponse> externas = externaService.encontrarAgenciasApiExterna(latitude, longitude, maxDistanceKm, page, size);
+
         if(!externas.content().isEmpty()){
-            String id = externas.content().get(0).externalId();
-            if(!repository.existsById(Long.valueOf(id))){
-                repository.saveAll(mapper.toListDistanciaResponse( externas));
-            }
+            List<String> existeIDs = repository.findAllExternalIds();
+             List<AgenciaResponse> novas = externas.content().stream().filter( id ->
+                             id.externalId() != null && !existeIDs.contains(id.externalId())).toList();
+
+             if(!novas.isEmpty()){
+                 List<Agencia> entidades = mapper.toEntityList(novas);
+                 repository.saveAll(entidades);
+                 logger.info("💾 {} novas agências cadastradas no banco.", entidades.size());
+             } else {
+                 logger.info("✅ Nenhuma nova agência para cadastrar.");
+             }
+
         }
-        logger.info("Total de agências retornadas pela API externa: {}", externas.content().size());
+
+        logger.info("✅Total de agências retornadas pela API externa: {}", externas.content().size());
         return externas;
     }
-
-    private List<Agencia> buscarAgenciasDoBanco(double latitude, double longitude,
-                                                double maxDistanceKm, Integer page, Integer size) {
+    private PageResponse<AgenciaResponse> buscarAgenciasDoBanco(
+            double latitude,
+            double longitude,
+            double maxDistanceKm,
+            Integer page,
+            Integer size
+    ) {
         try {
+            // 1️⃣ Calcula os deltas para busca retangular (área aproximada)
             double latDelta = maxDistanceKm / 111.0;
             double lonDelta = maxDistanceKm / (111.320 * Math.cos(Math.toRadians(latitude)));
 
-            Pageable pageable = PageRequest.of(page, size <= 0 ? DEFAULT_MAX_RESULTS : size, Sort.by("id"));
+            Pageable pageable = PageRequest.of(
+                    page,
+                    (size == null || size <= 0) ? DEFAULT_MAX_RESULTS : size,
+                    Sort.by("id")
+            );
 
-            return repository.findByLatitudeBetweenAndLongitudeBetween(
+            // 2️⃣ Busca as agências no banco pela área retangular aproximada
+            Page<Agencia> agenciasPage = repository.findByLatitudeBetweenAndLongitudeBetween(
                     latitude - latDelta, latitude + latDelta,
                     longitude - lonDelta, longitude + lonDelta,
                     pageable
-            ).getContent();
+            );
+
+            // 3️⃣ Calcula a distância real e filtrar somente as que estão dentro do raio
+            List<AgenciaResponse> agenciasComDistancia = agenciasPage.getContent().stream()
+                    .map(agencia -> {
+                        double distanciaReal = CalcularDistancia.distanceKm(
+                                latitude,
+                                longitude,
+                                agencia.getLatitude(),
+                                agencia.getLongitude()
+                        );
+                        agencia.setDistance(distanciaReal);
+
+                        if (distanciaReal <= maxDistanceKm) {
+                            return mapper.toAgenciaResponse(agencia);
+                        }
+                        return null;
+                    })
+                    .filter(Objects::nonNull)
+                    .sorted(Comparator.comparingDouble(AgenciaResponse::distanceKm)) // ordena pela distância
+                    .collect(Collectors.toList());
+
+            // 4️⃣ Retorna o resultado paginado no formato do PageResponse
+            logger.info("✅ Quantidade de agências encontradas no banco local: {} ",agenciasComDistancia.size());
+            return mapper.toPageResponseFromList(agenciasComDistancia, pageable, agenciasPage.getTotalElements());
 
         } catch (Exception e) {
-            logger.error("Erro ao buscar agências do banco: {}", e.getMessage());
-            return Collections.emptyList();
+            logger.error("❌ Erro ao buscar agências do banco: {}", e.getMessage(), e);
+            throw new EntityNotFoundException(
+                    " ❌ Não foi possível buscar agências no banco devido ao erro: " + e.getMessage()
+            );
         }
     }
+
 }

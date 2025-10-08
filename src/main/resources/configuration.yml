@@ -1,0 +1,19 @@
+resilience4j:
+  retry:
+    instances:
+      overpassRetry:
+        max-attempts: 3
+        wait-duration: 2s
+  circuitbreaker:
+    instances:
+      overpassCircuitBreaker:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 5
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+#  timelimiter:
+#    instances:
+#      overpassTimeout:
+#        timeout-duration: 5s

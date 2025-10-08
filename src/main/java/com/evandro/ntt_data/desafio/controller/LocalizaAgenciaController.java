@@ -32,15 +32,15 @@ public class LocalizaAgenciaController {
     public ResponseEntity<AgenciaResponse> saveAgencia(@RequestBody(required = true) AgenciaRequest requestDTO){
       return new ResponseEntity<>(service.createAgencia(requestDTO),HttpStatus.CREATED);
     }
-    @Operation(summary = "Buscar agencias próximas ordenadas por proximidade")
-    @GetMapping("/agencias/closest")
-    public ResponseEntity<PageResponse<DistanciaResponse>> findClosest(
+    @Operation(summary = "Buscar agencias próximas ordenadas por proximidade com paginação")
+    @GetMapping("/closest")
+    public ResponseEntity<PageResponse<AgenciaResponse>> findClosest(
             double latitude,
             double longitude,
             @RequestParam(required = false, defaultValue = "50") Double maxDistanceKm,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        PageResponse<DistanciaResponse> result = service.findClosestDistance(latitude, longitude, maxDistanceKm,page,size);
+        PageResponse<AgenciaResponse> result = service.encontrarAgenciasMaisProximas(latitude, longitude, maxDistanceKm,page,size);
         return ResponseEntity.ok(result);
     }
 
