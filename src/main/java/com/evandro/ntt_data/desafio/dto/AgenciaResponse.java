@@ -6,5 +6,6 @@ public record AgenciaResponse(
         Double positionX,
         Double positionY,
         String address,
-        Double distacia){
-}
+        Double distanceKm,
+        String externalId
+){}
