@@ -23,11 +23,11 @@ Permite localizar as agências mais próximas com base na latitude e longitude i
 
 ## 🚀 Visão Geral
 
-A **Find My Agency API** é um serviço RESTful desenvolvido em **Java 17 + Spring Boot 3** que permite:
+A **Find My Agency API** é um serviço RESTful desenvolvido em **Java 21 + Spring Boot 3** que permite:
 
 - Buscar agências bancárias mais próximas com base na geolocalização.
 - Cadastrar novas agências manualmente.
-- Consultar e armazenar dados de agências da **Overpass API (OpenStreetMap)**.
+- Consultar e armazenar dados de agências da **Overpass API**.
 - Aplicar paginação e cache em buscas.
 - Utilizar resiliência em chamadas externas com **Resilience4j**.
 
@@ -37,7 +37,7 @@ A **Find My Agency API** é um serviço RESTful desenvolvido em **Java 17 + Spri
 
 | Tecnologia | Versão / Descrição |
 |-------------|--------------------|
-| ☕ Java | 17 |
+| ☕ Java | 21 |
 | 🧱 Spring Boot | 3.x |
 | 🗄️ Spring Data JPA | Persistência de dados |
 | 🧭 OpenAPI / Swagger | Documentação automática |
