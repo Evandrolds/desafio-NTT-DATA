@@ -1,213 +1,259 @@
-API de Localização de Agências Bancárias
+# 🏦 Find My Agency API
 
-📋 Visão Geral:
+API de geolocalização e cadastro de agências bancárias.  
+Permite localizar as agências mais próximas com base na latitude e longitude informadas pelo usuário, integrando dados externos da **Overpass API (OpenStreetMap)** e armazenando no banco local.
 
-API REST para localização de agências bancárias desenvolvida em Spring Boot 3.5.6 com Java 21. A API busca agências em banco de dados local e, caso não encontre, consulta a API externa Overpass, retornando resultados ordenados por proximidade geográfica.
-🛠️ Tecnologias Utilizadas
+---
 
-    Java 21
+## 📘 Sumário
 
-    Spring Boot 3.5.6
+- [🚀 Visão Geral](#-visão-geral)
+- [🧩 Tecnologias Utilizadas](#-tecnologias-utilizadas)
+- [📦 Estrutura do Projeto](#-estrutura-do-projeto)
+- [⚙️ Configurações Principais](#️-configurações-principais)
+- [🗺️ Endpoints da API](#️-endpoints-da-api)
+- [📄 Modelos de Dados (DTOs)](#-modelos-de-dados-dtos)
+- [💾 Entidade](#-entidade)
+- [🌍 Integração com API Externa](#-integração-com-api-externa)
+- [🧱 Tratamento de Erros](#-tratamento-de-erros)
+- [📜 Licença](#-licença)
+- [📫 Contato](#-contato)
 
-    Spring Data JPA - Persistência de dados
+---
 
-    H2 Database - Banco em memória para testes
+## 🚀 Visão Geral
 
-    SpringDoc OpenAPI 2.8.13 - Documentação da API
+A **Find My Agency API** é um serviço RESTful desenvolvido em **Java 17 + Spring Boot 3** que permite:
 
-    Spring HATEOAS - Paginação e hypermedia
+- Buscar agências bancárias mais próximas com base na geolocalização.
+- Cadastrar novas agências manualmente.
+- Consultar e armazenar dados de agências da **Overpass API (OpenStreetMap)**.
+- Aplicar paginação e cache em buscas.
+- Utilizar resiliência em chamadas externas com **Resilience4j**.
 
-    Spring Cache - Cache de consultas
+---
 
-    Spring Actuator + Micrometer - Métricas e monitoramento
+## 🧩 Tecnologias Utilizadas
 
-    Lombok - Redução de código boilerplate
+| Tecnologia | Versão / Descrição |
+|-------------|--------------------|
+| ☕ Java | 17 |
+| 🧱 Spring Boot | 3.x |
+| 🗄️ Spring Data JPA | Persistência de dados |
+| 🧭 OpenAPI / Swagger | Documentação automática |
+| 🔄 Resilience4j | Retry, CircuitBreaker |
+| 🌍 Overpass API | Dados de agências bancárias (OSM) |
+| 🧮 Micrometer | Métricas |
+| 🧰 Lombok (opcional) | Redução de boilerplate |
+| 🧠 H2 / PostgreSQL | Banco de dados local (ajustável) |
 
-    Mockito - Testes unitários
+---
 
-🚀 Endpoints
-1. Cadastrar Agência
+## 📦 Estrutura do Projeto
 
+src/main/java/com/evandro/ntt_data/desafio/
+│
+├── configuration/
+│ ├── ApiExternaConfiguration.java
+│ ├── BeansConfig.java
+│ └── ConfigOpenAPI.java
+│
+├── controller/
+│ └── LocalizaAgenciaController.java
+│
+├── entity/
+│ └── Agencia.java
+│
+├── dto/
+│ ├── AgenciaRequest.java
+│ ├── AgenciaResponse.java
+│ └── PageResponse.java
+│
+├── repository/
+│ └── LocalizaAgenciaRepository.java
+│
+├── service/
+│ ├── LocalizaAgenciaService.java
+│ ├── LocalizaAgenciaServiceImpl.java
+│ ├── AgenciaExternaService.java
+│ └── AgenciaMapper.java
+│
+└── handler/
+└── ApiExceptionHandler.java
+
+
+---
+
+## ⚙️ Configurações Principais
+
+### 🔧 `ApiExternaConfiguration`
+Responsável por gerar a query utilizada para buscar dados na Overpass API:
+
+```java
+public String getReturnQuery(double raio, double lat, double lon) {
+    return String.format(Locale.US,
+        "[out:json];node[\"amenity\"=\"bank\"](around:%d,%.6f,%.6f);out;",
+        (int)(raio * 1000), lat, lon);
+}
+````
+
+🧱 BeansConfig
+
+Define beans básicos:
+
+ObjectMapper → conversão JSON
+
+RestTemplate → consumo da API externa (com cabeçalho User-Agent padrão)
+
+📘 ConfigOpenAPI
+
+Configuração da documentação OpenAPI/Swagger.
+
+```` Java
+@OpenAPIDefinition(
+    info = @Info(
+        title = "Find My Agency API",
+        version = "1.0.0",
+        description = "API de geolocalização e cadastro de agências bancárias.",
+        contact = @Contact(
+            name = "✔ Contato: Evandro",
+            email = "evandro.lima@empresa.com",
+            url = "https://linkedin.com/in/evandrolds"
+        ),
+        license = @License(
+            name = "MIT License",
+            url = "https://opensource.org/licenses/MIT"
+        )
+    )
+)
+````
+🗺️ Endpoints da API
 POST /api/agencia/cadastrar
 
-Cadastra uma nova agência bancária no banco de dados.
-Request Body:
-json
+Descrição: Cadastra uma nova agência manualmente.
 
+Request Body
+```` java
 {
-  "name": "string (2-200 caracteres)",
-  "latitude": "number (-90.0 a 90.0)",
-  "longitude": "number (-180.0 a 180.0)",
-  "address": "string",
-  "distancia": "number"
+  "name": "Banco XPTO",
+  "latitude": -23.55052,
+  "longitude": -46.633308,
+  "address": "Av. Paulista, 1000 - São Paulo/SP"
 }
+````
+Resposta
 
-Response (201 Created):
-json
-
+```` java
 {
-  "id": "long",
-  "name": "string",
-  "positionX": "number",
-  "positionY": "number",
-  "address": "string",
-  "distacia": "number"
+  "id": 1,
+  "name": "Banco XPTO",
+  "positionX": -23.55052,
+  "positionY": -46.633308,
+  "address": "Av. Paulista, 1000 - São Paulo/SP",
+  "distanceKm": null,
+  "externalId": null
 }
+````
+GET /api/agencia/closest
 
-2. Buscar Agências Próximas
+Descrição: Busca as agências mais próximas da localização informada (com paginação).
 
-GET /api/agencia/agencias/closest
+Parâmetros:
 
-Busca agências bancárias próximas a uma localização, ordenadas por proximidade.
-Parâmetros de Query:
-Parâmetro	Tipo	Obrigatório	Default	Descrição
-latitude	double	✅	-	Latitude do ponto de referência
-longitude	double	✅	-	Longitude do ponto de referência
-maxDistanceKm	double	❌	50	Raio máximo de busca em km
-page	int	❌	0	Número da página para paginação
-size	int	❌	10	Tamanho da página para paginação
-Response (200 OK):
-json
+Nome	Tipo	Obrigatório	Default	Descrição
+latitude	double	✅	-	Latitude atual
+longitude	double	✅	-	Longitude atual
+maxDistanceKm	double	❌	50	Raio máximo (km)
+page	int	❌	0	Página atual
+size	int	❌	10	Tamanho da página
 
+Exemplo de Requisição
+```` GET /api/agencia/closest?latitude=-23.55&longitude=-46.63&maxDistanceKm=10&page=0&size=5 ````
+Response 200
+```` java
 {
   "content": [
     {
-      "id": "long",
-      "name": "string",
-      "positionX": "number",
-      "positionY": "number",
-      "address": "string",
-      "distanceKm": "number",
-      "externalId": "string"
+      "id": 1,
+      "name": "Banco do Brasil",
+      "positionX": -23.551,
+      "positionY": -46.633,
+      "address": "Av. Paulista, 1500 - São Paulo/SP",
+      "distanceKm": 0.25,
+      "externalId": "123456789"
     }
   ],
-  "pageNumber": "int",
-  "pageSize": "int",
-  "totalElements": "long",
-  "totalPages": "int",
-  "last": "boolean"
+  "pageSize": 5,
+  "totalElements": 20,
+  "totalPages": 4,
+  "last": false
 }
+````
+📄 Modelos de Dados (DTOs)
+AgenciaRequest
+Campo	Tipo	Validação	Descrição
+name	String	@Size(min=2,max=200)	Nome da agência
+latitude	Double	@DecimalMin(-90) / @DecimalMax(90)	Latitude
+longitude	Double	@DecimalMin(-180) / @DecimalMax(180)	Longitude
+address	String	-	Endereço
+distancia	Double	-	Distância (opcional)
 
-🔄 Fluxo de Busca
-1. Busca Local (Banco H2)
+💾 Entidade
+Agencia
 
-    Consulta agências no banco H2 local
-
-    Filtra por proximidade usando cálculo de distância Haversine
-
-    Retorna resultados ordenados por distância
-
-2. Busca Externa (Overpass API)
-
-    Se não encontrar resultados locais, consulta a API Overpass
-
-    Busca por nodes com amenity=bank no raio especificado
-
-    Processa e formata os dados da resposta
-
-    Armazena no banco local para futuras consultas
-
-📐 Cálculo de Distância
-
-Utiliza a fórmula de Haversine para calcular distâncias geográficas:
-java
-
-private static final double raioDaTerraEmKm = 6371.0088;
-
-public static double distanceKm(double positionX, double positionY, double latitude, double longitude) {
-    double latRad1 = Math.toRadians(positionX);
-    double latRad2 = Math.toRadians(positionY);
-    double deltaLat = Math.toRadians(latitude - positionX);
-    double deltaLon = Math.toRadians(longitude - positionY);
-    
-    double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
-            + Math.cos(latRad1) * Math.cos(latRad2)
-            * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
-    
-    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return raioDaTerraEmKm * c;
-}
-
-💾 Estrutura de Dados
 Tabela: tb_agencia
-Campo	Tipo	Descrição
-id	BIGINT	ID único (auto-increment)
-name	VARCHAR	Nome da agência
-latitude	DOUBLE	Coordenada latitude
-longitude	DOUBLE	Coordenada longitude
-address	VARCHAR	Endereço completo
-externalId	VARCHAR	ID externo da Overpass API
-distance	DOUBLE	Distância calculada
-⚡ Funcionalidades
-Cache
 
-    Consultas cacheadas com @Cacheable
+Coluna	Tipo	Descrição
+id	Long (PK)	Identificador
+name	String	Nome
+latitude	Double	Latitude
+longitude	Double	Longitude
+address	String	Endereço
+externalId	String (único)	ID da Overpass API
+distance	Double	Distância calculada
 
-    Chave: {latitude, longitude, maxDistanceKm, page, size}
+🌍 Integração com API Externa
 
-Paginação
+A classe AgenciaExternaService faz chamadas para a Overpass API com resiliência:
 
-    Implementada com Spring HATEOAS
+Retry → Tenta novamente em caso de falha temporária.
 
-    Parâmetros page e size para controle
+CircuitBreaker → Evita sobrecarregar a API em falhas consecutivas.
 
-Documentação
+Fallback → Retorna agências locais do banco caso a Overpass falhe.
 
-    Swagger UI disponível em /swagger-ui.html
+Exemplo de Query Gerada:
+```` [out:json];node["amenity"="bank"](around:10000,-23.55052,-46.633308);out;````
 
-    OpenAPI 3.0 em /v3/api-docs
+Exemplo de Fallback:
+⚠️ Fallback acionado: Overpass API falhou (TimeoutException)
+→ Retornando até 10 agências armazenadas localmente.
 
-Monitoramento
+🧱 Tratamento de Erros
 
-    Spring Actuator para health checks
+Classe: ApiExceptionHandler
 
-    Micrometer para métricas de performance
+Exceção	Código HTTP	Descrição
+MethodArgumentNotValidException	400	Erro de validação nos campos
+Exception	500	Erro interno inesperado
 
-Validação
+Caso a Overpass esteja indisponível:
+```` json
+[
+  "latitude: must not be null",
+  "longitude: must not be null"
+]
+````
+📜 Licença:
+Licença MIT — veja o arquivo LICENSE
 
-    Validação de coordenadas geográficas
+📫 Contato:
+**Evandro Lima**  
+💼 [LinkedIn](https://www.linkedin.com/in/seu-perfil-linkedin)  
+📧 [E-mail](mailto:seuemail@exemplo.com)
+📂 [Repositório GitHub](https://github.com/Evandrolds/desafio-NTT-DATARepositório)
 
-    Tamanho do nome: 2-200 caracteres
+💡 Dica:
+A documentação completa da API (Swagger UI) pode ser acessada em:
+👉 http://localhost:8080/swagger-ui/index.html
 
-🔍 Exemplos de Uso
-Buscar agências próximas:
-bash
-
-GET /api/agencia/agencias/closest?latitude=-23.5505&longitude=-46.6333&maxDistanceKm=10&page=0&size=5
-
-Cadastrar agência:
-bash
-
-POST /api/agencia/cadastrar
-Content-Type: application/json
-
-{
-  "name": "Agência Centro",
-  "latitude": -23.5505,
-  "longitude": -46.6333,
-  "address": "Rua XV de Novembro, 100 - Centro, São Paulo/SP"
-}
-
-🚀 Execução
-bash
-
-# Compilar e executar
-mvn spring-boot:run
-
-# Acessar documentação
-http://localhost:8080/swagger-ui.html
-
-# Acessar banco H2 (se configurado)
-http://localhost:8080/h2-console
-
-📊 Características Técnicas
-
-    Cache: Spring Cache com estratégia simples
-
-    Paginação: Spring HATEOAS com PageResponse customizado
-
-    Logging: SLF4J com logs detalhados
-
-    Testes: Mockito para testes unitários
-
-    Validação: Bean Validation com mensagens customizadas
