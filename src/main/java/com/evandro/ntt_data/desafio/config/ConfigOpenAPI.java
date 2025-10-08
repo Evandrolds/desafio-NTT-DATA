@@ -18,9 +18,10 @@ import org.springframework.context.annotation.Configuration;
             Permite encontrar as agências mais próximas com base na localização do usuário.
             """,
                 contact = @io.swagger.v3.oas.annotations.info.Contact(
+
                         name = "Evandro Lima",
                         email = "evandro.lima@empresa.com",
-                        url = "https://linkedin.com/in/evandrolima"
+                        url = "https://linkedin.com/in/evandrolds"
                 ),
                 license = @io.swagger.v3.oas.annotations.info.License(
                         name = "MIT License",
@@ -28,8 +29,8 @@ import org.springframework.context.annotation.Configuration;
                 )
         ),
         externalDocs = @io.swagger.v3.oas.annotations.ExternalDocumentation(
-                description = "Documentação Completa da API",
-                url = "https://docs.meuapp.com/agencies-api"
+                description = "Documentação Completa da API no Github",
+                url = "https://github.com/Evandrolds/desafio-NTT-DATA/blob/master/README.md"
         ),
         tags = {
                 @Tag(name = "Agências", description = "Operações relacionadas a agências"),
@@ -48,13 +49,13 @@ public class ConfigOpenAPI {
                         .description("API para cadastro e localização de agências bancárias mais próximas")
                         .contact(new Contact()
                                 .name("Evandro Lima")
-                                .email("evandro.lima@empresa.com"))
+                                .email("evandro.lds.ds@outlook.com"))
                         .license(new License()
                                 .name("MIT")
                                 .url("https://opensource.org/licenses/MIT")))
                 .externalDocs(new ExternalDocumentation()
                         .description("Documentação Completa")
-                        .url("https://docs.meuapp.com/agencies-api"));
+                        .url("https://github.com/Evandrolds/desafio-NTT-DATA/blob/master/README.md"));
     }
 }
 
